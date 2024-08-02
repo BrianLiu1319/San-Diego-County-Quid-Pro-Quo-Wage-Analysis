@@ -9,7 +9,7 @@ import os
 # Get the directory of the current script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-county = 'Carlsbad'
+county = 'SanDiego'
 
 # Load the CSV files
 wages_path = os.path.join(BASE_DIR, f'{county}PoliceDepartmentWageData.csv')
@@ -26,7 +26,11 @@ contributions['DATE'] = pd.to_datetime(contributions['DATE'])
 contributions['Year'] = contributions['DATE'].dt.year
 
 # Convert 'AMOUNT' to numeric, forcing errors to NaN and then filling NaN with 0
+contributions['AMOUNT'] = contributions['AMOUNT'].astype(str)
 contributions['AMOUNT'] = pd.to_numeric(contributions['AMOUNT'].str.replace(',', ''), errors='coerce').fillna(0)
+
+# Convert 'Year' in contributions to datetime for merging
+contributions['Year'] = pd.to_datetime(contributions['Year'], format='%Y')
 
 # Create a Dash application
 app = dash.Dash(__name__)
@@ -40,6 +44,7 @@ app.layout = html.Div([
     dcc.Graph(id='salary-contribution-graph'),
     dcc.Store(id='clicked-points', data=[])
 ])
+
 
 @app.callback(
     Output('salary-contribution-graph', 'figure'),
@@ -55,27 +60,36 @@ def update_graph(selected_position, clicked_points):
         x=position_data['Year'],
         y=position_data['MedianPositionSalary'],
         mode='lines',
-        name=selected_position,
-        line=dict(width=2),
-        hovertemplate='%{x|%Y}: $%{y:.2f}<extra></extra>'
+        name='Median Salary'
     ))
 
-    # Merge wages and contributions data on the year
-    merged_data = contributions.merge(position_data, left_on='Year', right_on=position_data['Year'].dt.year, how='inner')
+    # Filter contribution data for the selected position
+    contribution_data = contributions.copy()
 
-    # Add contributions data as scatter points with tooltips
+    # Merge contribution data with position data to get the corresponding median salary
+    contribution_data = contribution_data.merge(position_data[['Year', 'MedianPositionSalary']], left_on='Year',
+                                                right_on='Year', how='left')
+
+    # Calculate vertical offset to avoid overlapping
+    contribution_data['VerticalOffset'] = contribution_data.groupby('DATE').cumcount()
+
+    # Apply the offset to the median salary for contributions
+    offset_value = 0.01 * position_data[
+        'MedianPositionSalary'].max()  # Adjust this value to make the offset more noticeable
+    contribution_data['AdjustedSalary'] = contribution_data['MedianPositionSalary'] + contribution_data[
+        'VerticalOffset'] * offset_value
+
     fig.add_trace(go.Scatter(
-        x=merged_data['DATE'],
-        y=merged_data['MedianPositionSalary'],
+        x=contribution_data['DATE'],
+        y=contribution_data['AdjustedSalary'],
         mode='markers',
+        marker=dict(size=10, color='red'),
         name='Contributions',
-        marker=dict(size=10, color='red', symbol='circle'),
-        text=merged_data.apply(lambda row: f"Date: {row['DATE'].strftime('%Y-%m-%d')}<br>"
-                                           f"Candidate: {row['NAME OF CANDIDATE']}<br>"
-                                           f"Office: {row['OFFICE SOUGHT OR HELD']}<br>"
-                                           f"Support/Oppose: {row['SUPPORT OR OPPOSE']}<br>"
-                                           f"Amount: ${row['AMOUNT']:.2f}<br>"
-                                           f"Won/Lost: {row['WON OR LOST']}", axis=1),
+        text=contribution_data.apply(lambda row: f"Candidate: {row['NAME OF CANDIDATE']}<br>"
+                                                 f"Office: {row['OFFICE SOUGHT OR HELD']}<br>"
+                                                 f"Support/Oppose: {row['SUPPORT OR OPPOSE']}<br>"
+                                                 f"Amount: ${row['AMOUNT']:.2f}<br>"
+                                                 f"Won/Lost: {row['WON OR LOST']}", axis=1),
         hoverinfo='text'
     ))
 
@@ -106,6 +120,7 @@ def update_graph(selected_position, clicked_points):
 
     return fig
 
+
 @app.callback(
     Output('clicked-points', 'data'),
     Input('salary-contribution-graph', 'clickData'),
@@ -132,6 +147,7 @@ def store_click_data(clickData, clicked_points):
         clicked_points.append(new_point)
 
     return clicked_points
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
