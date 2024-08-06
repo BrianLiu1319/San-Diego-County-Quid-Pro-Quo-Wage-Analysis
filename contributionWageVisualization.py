@@ -6,14 +6,15 @@ from dash import html
 from dash.dependencies import Input, Output, State
 import os
 
+
 # Get the directory of the current script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-county = 'SanDiego'
+cities = 'SanDiego','Carlsbad','ChulaVista','Oceanside'
 
 # Load the CSV files
-wages_path = os.path.join(BASE_DIR, f'{county}PoliceDepartmentWageData.csv')
-contributions_path = os.path.join(BASE_DIR, f'{county}PoliceContributionsBinder.csv')
+wages_path = os.path.join(BASE_DIR, 'CitiesPoliceDepartmentWageData.csv')
+contributions_path = os.path.join(BASE_DIR, 'CitiesPoliceContributionsBinder.csv')
 
 wages = pd.read_csv(wages_path)
 contributions = pd.read_csv(contributions_path)
@@ -32,13 +33,23 @@ contributions['AMOUNT'] = pd.to_numeric(contributions['AMOUNT'].str.replace(',',
 # Convert 'Year' in contributions to datetime for merging
 contributions['Year'] = pd.to_datetime(contributions['Year'], format='%Y')
 
+def color_picker(outcome):
+    if outcome == 'no' or outcome == 'LOST':
+        return 'red'
+    elif outcome == 'yes' or outcome == 'WON':
+        return 'blue'
+    else: return 'black'
+
+contributions['color'] = contributions['WON OR LOST'].apply(color_picker)
+
+
 # Create a Dash application
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
     dcc.Dropdown(
         id='position-dropdown',
-        options=[{'label': pos, 'value': pos} for pos in wages['Position'].unique()],
+        options=[{'label': pos, 'value': pos} for pos in wages['Position'].unique()], # RuntimeWarning # assigning None to unbound local 'pos'
         value=wages['Position'].unique()[0]
     ),
     dcc.Graph(id='salary-contribution-graph'),
@@ -51,6 +62,9 @@ app.layout = html.Div([
     [Input('position-dropdown', 'value'),
      Input('clicked-points', 'data')]
 )
+
+
+
 def update_graph(selected_position, clicked_points):
     fig = go.Figure()
 
@@ -78,12 +92,13 @@ def update_graph(selected_position, clicked_points):
         'MedianPositionSalary'].max()  # Adjust this value to make the offset more noticeable
     contribution_data['AdjustedSalary'] = contribution_data['MedianPositionSalary'] + contribution_data[
         'VerticalOffset'] * offset_value
-
+    
+    
     fig.add_trace(go.Scatter(
         x=contribution_data['DATE'],
         y=contribution_data['AdjustedSalary'],
         mode='markers',
-        marker=dict(size=10, color='red'),
+        marker=dict(size=10, color=contribution_data['color']),
         name='Contributions',
         text=contribution_data.apply(lambda row: f"Candidate: {row['NAME OF CANDIDATE']}<br>"
                                                  f"Office: {row['OFFICE SOUGHT OR HELD']}<br>"
