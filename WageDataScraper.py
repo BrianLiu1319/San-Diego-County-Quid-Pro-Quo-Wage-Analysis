@@ -10,13 +10,24 @@ def fetch_page_data(url):
     else:
         return None
 
+
 def get_total_pages(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
+
+    num_employees_txt = soup.find(string = lambda x: x and 'employee' in x)
+    if num_employees_txt is not None:
+        num_employees = int(num_employees_txt.split()[0].replace(',', ''))
+
+    # Try to find pagination text
     pagination_text = soup.find(string=lambda x: x and 'Page' in x)
-    if pagination_text:
-        total_pages = int(pagination_text.split()[-1])  # Extracts the last number, which should be the total pages
+
+    if pagination_text and num_employees>50:
+        # Extracts the last number, which should be the total pages
+        total_pages = int(pagination_text.split()[-1])
         return total_pages
-    return 1  # Default to 1 if not found
+    else:
+        # If pagination text isn't found or less than 50 employees, assume there is only 1 page
+        return 1
 
 def parse_table(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -70,13 +81,19 @@ def parse_table(html_content):
 
 def main():
     years = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
-    cities = ['carlsbad', 'chula-vista', 'coronado', 'el-cajon', 'escondido', 'la-mesa', 'national-city', 'oceanside',
+    cities_police = ['carlsbad', 'chula-vista', 'coronado', 'el-cajon', 'escondido', 'la-mesa', 'national-city', 'oceanside',
               'san-diego']
-    search_filter = 'Police'
+    cities_fire = ['San Diego', 'Carlsbad', 'Chula Vista', 'Coronado', 'Del Mar',
+       'El Cajon', 'Encinitas', 'Escondido', 'Imperial Beach', 'La Mesa',
+       'Lemon Grove', 'National City', 'Oceanside', 'Poway', 'San Marcos',
+       'Santee', 'Solana Beach', 'Vista']
+    search_filter = 'Fire'
     all_data = []
     headers = None
 
-    for city in cities:
+    for city in cities_fire:
+        city = city.lower().replace(' ', '-')
+        print(city + '\n')
         for year in years:
             base_url = f"https://transparentcalifornia.com/salaries/search/?a={city}&q={search_filter}&y={year}&page="
             numPages = get_total_pages(fetch_page_data(f"{base_url}{1}"))
@@ -109,8 +126,8 @@ def main():
     if len(all_data) != 0:
         # Convert to DataFrame and save to CSV
         df = pd.DataFrame(all_data, columns=headers)
-        df.to_csv(f'police_salaries.csv', index=False)
-        print(f"Data written to police_salaries.csv")
+        df.to_csv(f'{search_filter.lower()}_salaries.csv', index=False)
+        print(f"Data written to {search_filter.lower()}_salaries.csv")
 
 
 if __name__ == '__main__':
