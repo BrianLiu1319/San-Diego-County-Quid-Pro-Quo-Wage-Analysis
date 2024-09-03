@@ -1,0 +1,79 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(ggpubr)
+```
+
+```{r}
+PAC_data = read.csv("WageRoC.csv")
+head(PAC_data)
+```
+
+```{r}
+#plot(PAC_data[PAC_data$City=='San Diego',]$Year,PAC_data[PAC_data$City=='San Diego',]$NumEmpls)
+#lines(PAC_data[PAC_data$City=='San Diego',]$Year,PAC_data[PAC_data$City=='San Diego',]$NumEmpls, col='green')
+ggplot(PAC_data |> filter(City=='San Diego'),aes(Year,NumEmpls)) +
+         geom_line()
+```
+
+```{r}
+for(i in unique(PAC_data$City)){
+  plt = ggplot(PAC_data |> filter(City==i),aes(Year,NumEmpls)) +
+         geom_line() +
+         ggtitle(i)
+  print(plt)
+}
+```
+
+```{r}
+cities <- unique(PAC_data$City)
+#cities = cities[1:8]
+
+numEmpls = ggplot(PAC_data |> filter(City %in% cities), aes(x = Year, y = log10(NumEmpls), color = City)) +
+  geom_line() +
+  ylab('Log Num of Empl.')
+  
+medTotWage = ggplot(PAC_data |> filter(City %in% cities), aes(x = Year, y = MedTotWage, color = City)) +
+  geom_line() +
+  ylab('Median Total Wage')
+
+ggarrange(numEmpls,medTotWage, ncol=2,nrow=1,common.legend = TRUE, legend='bottom')
+#ggsave("NumEmpls vs Year, MedTotWage vs Year Comparison Graph(NO SD).png")
+```
+
+```{r}
+ggplot(PAC_data |> filter(City %in% cities), aes(x = Year, y = log10(NumEmpls), color = City)) +
+  geom_line() +
+  ylab('Log Num of Empl.')
+ggsave("Log Num of Empl. vs Year.png")
+```
+
+```{r}
+ggplot(PAC_data |> filter(City %in% cities), aes(x = Year, y = MedTotWage, color = City)) +
+  geom_line() +
+  ylab('Median Total Wage')
+ggsave("Median Total Wage vs Year.png")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
