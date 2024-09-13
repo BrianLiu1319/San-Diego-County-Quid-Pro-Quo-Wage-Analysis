@@ -17,6 +17,11 @@ Below is a summary of each file in repo 9/3/2024
 - Output: Mean Total Wages vs Year Graph
 - Datasets: PoliceDepartmentWagesConsolidated.csv
 
+**PublicEmployeeAnalysis.ipynb**
+- Purpose: Clean data and analyze movements of employees
+- Output: sdcounty_salaries_names_movements.csv, sdcounty_movement.pdf, sdcounty_salary_num_empls.pdf, sdcounty_avg_salary
+- Datasets: cities_sd_salaries.csv, SeriesReport-20240712171831_4c56aa.csv
+
 **ReadWagesCalculation.R**
 - Purpose: Data munging
 - Output: REAL_SD_Employee.csv
