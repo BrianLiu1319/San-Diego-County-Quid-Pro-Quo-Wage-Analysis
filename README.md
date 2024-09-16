@@ -11,6 +11,11 @@ Below is a summary of each file in repo 9/3/2024
 - Output: REAL_EmployeeCompensation.csv
 - Datasets: CAEmployee_data.csv (Not In Drive), SDCountyEmployee_Data.csv (In Drive), 2013_K12Education.csv, ... , 2022_K12Education.csv
 
+**Min-Max_wage_analysis.R**
+- Purpose: Find and compare hypothetical total pay for salaries if all salaries were set to a fixed salary, this salary being the min and max salary listed.
+- Output: N/A (Work in progress)
+- Datasets: police_wages_cleaned.csv, k12_sd_wages_cleaned.csv, fire_wages_cleaned.csv, eng_wages_cleaned.csv
+
 
 **PolicePACWageXNumEmployees.ipynb**
 - Purpose: Data Vizualization of Mean Total Wage Time-Series for Police Officer by City, Minor data munging
