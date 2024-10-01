@@ -1,5 +1,5 @@
 # Set Working Directory
-setwd("C:/Users/brand/SDCTA/San-Diego-County-Quid-Pro-Quo-Wage-Analysis")
+# setwd("C:/.../SDCTA/San-Diego-County-Quid-Pro-Quo-Wage-Analysis")
 
 # Load respective data sets
 police = read.csv("police_salaries_cleaned.csv")
@@ -17,10 +17,10 @@ min.max.sum.job.title = function(dat){
   for (job in jobs) {
     job.dat = dat[dat$Job.title == job,] # Filter data set to job title
     job.dat.2023 = job.dat[job.dat$Year == max(job.dat$Year),] # Filter data set to latest year
-    job.min = min(job.dat.2023$Total.pay) # Calc max
-    job.max = max(job.dat.2023$Total.pay) # Calc min
-    job.num = length(job.dat.2023$Total.pay) # Calc number of employees
-    job.sum = sum(job.dat.2023$Total.pay) # Calc REAL total salaries
+    job.min = min(job.dat.2023[job.dat.2023$Regular.pay > 0,]$Regular.pay) # Calc min
+    job.max = max(job.dat.2023[job.dat.2023$Regular.pay > 0,]$Regular.pay) # Calc max
+    job.num = length(job.dat.2023$Regular.pay) # Calc number of employees
+    job.sum = sum(job.dat.2023$Regular.pay) # Calc REAL total salaries
     
     job.min.max.sum = cbind(job, job.min, job.max, job.num, job.sum)
     jobs.min.max.sum = rbind(jobs.min.max.sum, job.min.max.sum)
@@ -42,14 +42,17 @@ sd_employees$job.min <- as.numeric(sd_employees$job.min)
 sd_employees$job.max <- as.numeric(sd_employees$job.max)
 sd_employees$job.num <- as.numeric(sd_employees$job.num)
 
-sd_employees$total.pay.min = sd_employees$job.min * sd_employees$job.num
-sd_employees$total.pay.max = sd_employees$job.max * sd_employees$job.num
+sd_employees$Regular.pay.min = sd_employees$job.min * sd_employees$job.num
+sd_employees$Regular.pay.max = sd_employees$job.max * sd_employees$job.num
 
+sd_employees = sd_employees[sd_employees$job.min != Inf,]
 
+sd_employees$min.sum = sd_employees$job.num * sd_employees$job.min
+sd_employees$max.sum = sd_employees$job.num * sd_employees$job.max
 
+min.diff = sum(as.numeric(sd_employees$job.sum)) - sum(sd_employees$min.sum)
+max.diff = sum(as.numeric(sd_employees$job.sum)) - sum(sd_employees$max.sum)
 
-
-
-
-
+print(paste("Money Saved",min.diff))
+print(paste("Money Lost",max.diff))
 
