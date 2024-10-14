@@ -6,4 +6,4 @@ This repo serves to organize the SDCTA data science team workflow. The purpose o
 Where users can get help with your project
 A Code Dictionary and data dictionary is currently being implemented into the repo wiki.
 
-This repo contains the code of the SDCTA data science team which includes: Ashvin Chaudhary, Brandon Miner, Eric Jung, Khalil Burrell, and Ryan Penkala (Lead).
+This repo contains the code of the SDCTA data science team which includes: Ashvin Chaudhary, Brandon Miner, Brian Liu, Eric Jung, Khalil Burrell, and Ryan Penkala (Lead).
